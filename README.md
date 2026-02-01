@@ -1,1 +1,1 @@
-# cf_ai_cloudflare_ai_project
+# AI Powered app on Cloudflare
