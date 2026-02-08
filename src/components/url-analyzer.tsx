@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Search, Shield, Activity, Brain, CheckCircle2 } from 'lucide-react';
+import { Globe, Search, Shield, Activity, Brain, CheckCircle2, Moon, Sun, AlertCircle, Info, Lock, FileText } from 'lucide-react';
+import { useTheme } from './theme-provider';
+import { ResultCard } from './result-card';
 
 const ANALYSIS_STEPS = [
   {
@@ -36,11 +38,33 @@ const ANALYSIS_STEPS = [
   },
 ];
 
+interface AnalysisResult {
+  url: string;
+  security: {
+    https: boolean;
+    sslValid: boolean;
+    maliciousPatterns: boolean;
+    riskScore: number;
+  };
+  domain: {
+    age: string;
+    registrar: string;
+    lastUpdated: string;
+  };
+  content: {
+    loadTime: string;
+    mobileFriendly: boolean;
+    contentType: string;
+  };
+  recommendation: string;
+}
+
 export default function UrlAnalyzer() {
+  const { theme, toggleTheme } = useTheme();
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
 
   useEffect(() => {
     if (!isAnalyzing) {
@@ -78,30 +102,26 @@ export default function UrlAnalyzer() {
     await new Promise((resolve) => setTimeout(resolve, totalDuration));
 
     // Mock result
-    const mockResult = `URL Analysis Complete
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Target URL: ${url}
-
-Security Assessment:
-✓ HTTPS protocol detected
-✓ Valid SSL certificate
-✓ No known malicious patterns
-
-Domain Information:
-• Domain age: 5 years
-• Registrar: Example Registrar Inc.
-• Last updated: 30 days ago
-
-Content Analysis:
-• Page load time: 1.2s
-• Mobile-friendly: Yes
-• Content type: Web Application
-
-AI Risk Score: Low (2/10)
-Recommendation: Safe to proceed
-
-This analysis was powered by Cloudflare AI`;
+    const mockResult: AnalysisResult = {
+      url,
+      security: {
+        https: true,
+        sslValid: true,
+        maliciousPatterns: false,
+        riskScore: 2,
+      },
+      domain: {
+        age: '5 years',
+        registrar: 'Example Registrar Inc.',
+        lastUpdated: '30 days ago',
+      },
+      content: {
+        loadTime: '1.2s',
+        mobileFriendly: true,
+        contentType: 'Web Application',
+      },
+      recommendation: 'Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.',
+    };
 
     setResult(mockResult);
     setIsAnalyzing(false);
@@ -112,11 +132,24 @@ This analysis was powered by Cloudflare AI`;
       <div className="bg-card rounded-lg border border-border shadow-2xl">
         {/* Header */}
         <div className="border-b border-border px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-              <Globe className="w-5 h-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                <Globe className="w-5 h-5 text-primary" />
+              </div>
+              <h1 className="text-2xl font-semibold text-card-foreground">AI URL Analyzer</h1>
             </div>
-            <h1 className="text-2xl font-semibold text-card-foreground">AI URL Analyzer</h1>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted/50 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <Moon className="w-5 h-5 text-muted-foreground" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -235,10 +268,111 @@ This analysis was powered by Cloudflare AI`;
           )}
 
           {result && (
-            <div className="bg-muted/20 rounded-md p-5 border border-border/50">
-              <pre className="font-mono text-sm text-card-foreground whitespace-pre-wrap leading-relaxed">
-                {result}
-              </pre>
+            <div className="space-y-4">
+              {/* Target URL */}
+              <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">Target URL</p>
+                <p className="text-sm text-foreground font-medium break-all">{result.url}</p>
+              </div>
+
+              {/* Security Assessment */}
+              <ResultCard
+                title="Security Assessment"
+                icon={<Shield className="w-4 h-4" />}
+                defaultOpen={true}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">HTTPS Protocol Detected</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Secure connection established</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Valid SSL Certificate</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Certificate is trusted and up to date</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">No Known Malicious Patterns</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Passed threat intelligence checks</p>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">AI Risk Score</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-success">{result.security.riskScore}/10</span>
+                        <span className="px-2 py-1 bg-success/10 text-success text-xs font-medium rounded">Low Risk</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ResultCard>
+
+              {/* Domain Information */}
+              <ResultCard
+                title="Domain Information"
+                icon={<Globe className="w-4 h-4" />}
+                defaultOpen={true}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Domain Age</span>
+                    <span className="text-sm font-medium text-foreground">{result.domain.age}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Registrar</span>
+                    <span className="text-sm font-medium text-foreground">{result.domain.registrar}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Last Updated</span>
+                    <span className="text-sm font-medium text-foreground">{result.domain.lastUpdated}</span>
+                  </div>
+                </div>
+              </ResultCard>
+
+              {/* Content Analysis */}
+              <ResultCard
+                title="Content Analysis"
+                icon={<FileText className="w-4 h-4" />}
+                defaultOpen={true}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Page Load Time</span>
+                    <span className="text-sm font-medium text-foreground">{result.content.loadTime}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Mobile Friendly</span>
+                    <span className={`text-sm font-medium ${result.content.mobileFriendly ? 'text-success' : 'text-danger'}`}>
+                      {result.content.mobileFriendly ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Content Type</span>
+                    <span className="text-sm font-medium text-foreground">{result.content.contentType}</span>
+                  </div>
+                </div>
+              </ResultCard>
+
+              {/* AI Recommendation */}
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 flex-shrink-0">
+                    <Brain className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
+                    <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
