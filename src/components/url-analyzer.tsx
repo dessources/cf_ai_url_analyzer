@@ -1,11 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Globe, Search, Shield, Activity, Brain, CheckCircle2, Moon, Sun, AlertCircle, Info, Lock, FileText, AlertTriangle, XCircle } from 'lucide-react';
-import { useTheme } from './theme-provider';
-import { ResultCard } from './result-card';
+import { useState, useEffect } from "react";
+import {
+  Globe,
+  Search,
+  Shield,
+  Activity,
+  Brain,
+  CheckCircle2,
+  Moon,
+  Sun,
+  AlertCircle,
+  Info,
+  Lock,
+  FileText,
+  AlertTriangle,
+  XCircle,
+} from "lucide-react";
+import { useTheme } from "./theme-provider";
+import { ResultCard } from "./result-card";
 
-type ErrorType = 'invalid_url' | 'service_unavailable' | 'rate_limit' | 'network_error' | null;
+type ErrorType =
+  | "invalid_url"
+  | "service_unavailable"
+  | "rate_limit"
+  | "network_error"
+  | null;
 
 interface AnalysisError {
   type: ErrorType;
@@ -15,32 +35,32 @@ interface AnalysisError {
 
 const ANALYSIS_STEPS = [
   {
-    id: 'validate',
-    label: 'Validating URL & extracting metadata',
+    id: "validate",
+    label: "Validating URL & extracting metadata",
     icon: Search,
     duration: 1500,
   },
   {
-    id: 'scanner',
-    label: 'Calling Cloudflare URL Scanner API',
+    id: "scanner",
+    label: "Calling Cloudflare URL Scanner API",
     icon: Globe,
     duration: 2000,
   },
   {
-    id: 'reputation',
-    label: 'Gathering reputation & threat intelligence',
+    id: "reputation",
+    label: "Gathering reputation & threat intelligence",
     icon: Shield,
     duration: 1800,
   },
   {
-    id: 'ai',
-    label: 'Processing data with Workers AI (Llama)',
+    id: "ai",
+    label: "Processing data with Workers AI (Llama)",
     icon: Brain,
     duration: 2200,
   },
   {
-    id: 'verdict',
-    label: 'Generating final verdict',
+    id: "verdict",
+    label: "Generating final verdict",
     icon: Activity,
     duration: 1000,
   },
@@ -69,7 +89,7 @@ interface AnalysisResult {
 
 export default function UrlAnalyzer() {
   const { theme, toggleTheme } = useTheme();
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -88,9 +108,12 @@ export default function UrlAnalyzer() {
       if (currentStepIndex < totalSteps) {
         setCurrentStep(currentStepIndex);
         currentStepIndex++;
-        
+
         if (currentStepIndex < totalSteps) {
-          setTimeout(advanceStep, ANALYSIS_STEPS[currentStepIndex - 1].duration);
+          setTimeout(
+            advanceStep,
+            ANALYSIS_STEPS[currentStepIndex - 1].duration,
+          );
         }
       }
     };
@@ -100,7 +123,7 @@ export default function UrlAnalyzer() {
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!url.trim()) return;
 
     // Basic URL validation
@@ -108,9 +131,10 @@ export default function UrlAnalyzer() {
       new URL(url);
     } catch {
       setError({
-        type: 'invalid_url',
-        message: 'Invalid URL Format',
-        details: 'Please enter a valid URL including the protocol (http:// or https://)',
+        type: "invalid_url",
+        message: "Invalid URL Format",
+        details:
+          "Please enter a valid URL including the protocol (http:// or https://)",
       });
       return;
     }
@@ -121,31 +145,42 @@ export default function UrlAnalyzer() {
 
     try {
       // Simulate AI analysis - replace with actual API call
-      const totalDuration = ANALYSIS_STEPS.reduce((sum, step) => sum + step.duration, 0);
+      const totalDuration = ANALYSIS_STEPS.reduce(
+        (sum, step) => sum + step.duration,
+        0,
+      );
       await new Promise((resolve) => setTimeout(resolve, totalDuration));
 
       // Simulate random errors for demonstration (remove in production)
       const shouldSimulateError = Math.random() < 0.2; // 20% chance of error
       if (shouldSimulateError) {
-        const errorTypes: ErrorType[] = ['service_unavailable', 'rate_limit', 'network_error'];
-        const randomError = errorTypes[Math.floor(Math.random() * errorTypes.length)];
-        
+        const errorTypes: ErrorType[] = [
+          "service_unavailable",
+          "rate_limit",
+          "network_error",
+        ];
+        const randomError =
+          errorTypes[Math.floor(Math.random() * errorTypes.length)];
+
         const errorMessages = {
           service_unavailable: {
-            message: 'Service Temporarily Unavailable',
-            details: 'The URL analysis service is currently experiencing issues. Please try again in a few moments.',
+            message: "Service Temporarily Unavailable",
+            details:
+              "The URL analysis service is currently experiencing issues. Please try again in a few moments.",
           },
           rate_limit: {
-            message: 'Rate Limit Exceeded',
-            details: 'You have reached the maximum number of requests. Please wait a few minutes before trying again.',
+            message: "Rate Limit Exceeded",
+            details:
+              "You have reached the maximum number of requests. Please wait a few minutes before trying again.",
           },
           network_error: {
-            message: 'Network Connection Error',
-            details: 'Unable to connect to the analysis service. Please check your internet connection and try again.',
+            message: "Network Connection Error",
+            details:
+              "Unable to connect to the analysis service. Please check your internet connection and try again.",
           },
         };
 
-        throw new Error(randomError);
+        throw new Error(randomError as string);
       }
 
       // Mock result
@@ -158,16 +193,17 @@ export default function UrlAnalyzer() {
           riskScore: 2,
         },
         domain: {
-          age: '5 years',
-          registrar: 'Example Registrar Inc.',
-          lastUpdated: '30 days ago',
+          age: "5 years",
+          registrar: "Example Registrar Inc.",
+          lastUpdated: "30 days ago",
         },
         content: {
-          loadTime: '1.2s',
+          loadTime: "1.2s",
           mobileFriendly: true,
-          contentType: 'Web Application',
+          contentType: "Web Application",
         },
-        recommendation: 'Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.',
+        recommendation:
+          "Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.",
       };
 
       setResult(mockResult);
@@ -175,23 +211,30 @@ export default function UrlAnalyzer() {
       const errorType = (err as Error).message as ErrorType;
       const errorMessages = {
         service_unavailable: {
-          message: 'Service Temporarily Unavailable',
-          details: 'The URL analysis service is currently experiencing issues. Please try again in a few moments.',
+          message: "Service Temporarily Unavailable",
+          details:
+            "The URL analysis service is currently experiencing issues. Please try again in a few moments.",
         },
         rate_limit: {
-          message: 'Rate Limit Exceeded',
-          details: 'You have reached the maximum number of requests. Please wait a few minutes before trying again.',
+          message: "Rate Limit Exceeded",
+          details:
+            "You have reached the maximum number of requests. Please wait a few minutes before trying again.",
         },
         network_error: {
-          message: 'Network Connection Error',
-          details: 'Unable to connect to the analysis service. Please check your internet connection and try again.',
+          message: "Network Connection Error",
+          details:
+            "Unable to connect to the analysis service. Please check your internet connection and try again.",
         },
       };
 
       setError({
         type: errorType,
-        message: errorMessages[errorType as keyof typeof errorMessages]?.message || 'Analysis Failed',
-        details: errorMessages[errorType as keyof typeof errorMessages]?.details || 'An unexpected error occurred. Please try again.',
+        message:
+          errorMessages[errorType as keyof typeof errorMessages]?.message ||
+          "Analysis Failed",
+        details:
+          errorMessages[errorType as keyof typeof errorMessages]?.details ||
+          "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsAnalyzing(false);
@@ -208,14 +251,16 @@ export default function UrlAnalyzer() {
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                 <Globe className="w-5 h-5 text-primary" />
               </div>
-              <h1 className="text-2xl font-semibold text-card-foreground">AI URL Analyzer</h1>
+              <h1 className="text-2xl font-semibold text-card-foreground">
+                AI URL Analyzer
+              </h1>
             </div>
             <button
               onClick={toggleTheme}
               className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted/50 transition-colors"
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun className="w-5 h-5 text-muted-foreground" />
               ) : (
                 <Moon className="w-5 h-5 text-muted-foreground" />
@@ -240,7 +285,7 @@ export default function UrlAnalyzer() {
               disabled={isAnalyzing || !url.trim()}
               className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
             >
-              {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+              {isAnalyzing ? "Analyzing..." : "Analyze"}
             </button>
           </form>
         </div>
@@ -254,7 +299,9 @@ export default function UrlAnalyzer() {
                   <Globe className="w-8 h-8 text-muted-foreground/50" />
                 </div>
                 <p className="text-lg">Analysis will appear here</p>
-                <p className="text-sm mt-2">Enter a URL above and click Analyze to begin</p>
+                <p className="text-sm mt-2">
+                  Enter a URL above and click Analyze to begin
+                </p>
               </div>
             </div>
           )}
@@ -265,17 +312,21 @@ export default function UrlAnalyzer() {
                 <div className="bg-danger/5 border border-danger/20 rounded-lg p-6">
                   <div className="flex items-start gap-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-danger/10 flex-shrink-0">
-                      {error.type === 'invalid_url' ? (
+                      {error.type === "invalid_url" ? (
                         <AlertCircle className="w-5 h-5 text-danger" />
-                      ) : error.type === 'rate_limit' ? (
+                      ) : error.type === "rate_limit" ? (
                         <AlertTriangle className="w-5 h-5 text-danger" />
                       ) : (
                         <XCircle className="w-5 h-5 text-danger" />
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-foreground mb-2">{error.message}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{error.details}</p>
+                      <h3 className="text-base font-semibold text-foreground mb-2">
+                        {error.message}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                        {error.details}
+                      </p>
                       <button
                         onClick={() => setError(null)}
                         className="px-4 py-2 bg-danger/10 hover:bg-danger/20 text-danger text-sm font-medium rounded-md transition-colors"
@@ -297,7 +348,8 @@ export default function UrlAnalyzer() {
                   <div className="w-16 h-16 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     {(() => {
-                      const StepIcon = ANALYSIS_STEPS[currentStep]?.icon || Globe;
+                      const StepIcon =
+                        ANALYSIS_STEPS[currentStep]?.icon || Globe;
                       return <StepIcon className="w-7 h-7 text-primary" />;
                     })()}
                   </div>
@@ -329,19 +381,19 @@ export default function UrlAnalyzer() {
                       key={step.id}
                       className={`flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
                         isCurrent
-                          ? 'bg-primary/5 border-primary/30'
+                          ? "bg-primary/5 border-primary/30"
                           : isCompleted
-                          ? 'bg-muted/20 border-border/50'
-                          : 'bg-transparent border-border/30 opacity-50'
+                            ? "bg-muted/20 border-border/50"
+                            : "bg-transparent border-border/30 opacity-50"
                       }`}
                     >
                       <div
                         className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
                           isCompleted
-                            ? 'bg-primary text-primary-foreground'
+                            ? "bg-primary text-primary-foreground"
                             : isCurrent
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-muted/30 text-muted-foreground'
+                              ? "bg-primary/20 text-primary"
+                              : "bg-muted/30 text-muted-foreground"
                         }`}
                       >
                         {isCompleted ? (
@@ -353,10 +405,10 @@ export default function UrlAnalyzer() {
                       <p
                         className={`text-sm font-medium transition-colors ${
                           isCurrent
-                            ? 'text-foreground'
+                            ? "text-foreground"
                             : isCompleted
-                            ? 'text-muted-foreground'
-                            : 'text-muted-foreground/60'
+                              ? "text-muted-foreground"
+                              : "text-muted-foreground/60"
                         }`}
                       >
                         {step.label}
@@ -371,7 +423,7 @@ export default function UrlAnalyzer() {
           {result && (
             <div>
               {/* Sticky Header - AI Recommendation and Target URL */}
-              <div className="sticky top-0 z-10 bg-card pb-4 space-y-4">
+              <div className="sticky top-5 z-10 bg-card pb-4 space-y-4">
                 {/* AI Recommendation - Shown First */}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
                   <div className="flex items-start gap-3">
@@ -379,106 +431,156 @@ export default function UrlAnalyzer() {
                       <Brain className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
-                      <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
+                      <h4 className="text-sm font-semibold text-foreground mb-1">
+                        AI Recommendation
+                      </h4>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {result.recommendation}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Target URL */}
                 <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
-                  <p className="text-xs text-muted-foreground mb-1">Target URL</p>
-                  <p className="text-sm text-foreground font-medium break-all">{result.url}</p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Target URL
+                  </p>
+                  <p className="text-sm text-foreground font-medium break-all">
+                    {result.url}
+                  </p>
                 </div>
               </div>
 
               {/* Scrollable Details Section */}
               <div className="space-y-4 pt-4">
-              {/* Security Assessment */}
-              <ResultCard
-                title="Security Assessment"
-                icon={<Shield className="w-4 h-4" />}
-                defaultOpen={true}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">HTTPS Protocol Detected</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Secure connection established</p>
+                {/* Security Assessment */}
+                <ResultCard
+                  title="Security Assessment"
+                  icon={<Shield className="w-4 h-4" />}
+                  defaultOpen={true}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          HTTPS Protocol Detected
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Secure connection established
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Valid SSL Certificate</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Certificate is trusted and up to date</p>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          Valid SSL Certificate
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Certificate is trusted and up to date
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">No Known Malicious Patterns</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Passed threat intelligence checks</p>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          No Known Malicious Patterns
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Passed threat intelligence checks
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="pt-3 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">AI Risk Score</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-success">{result.security.riskScore}/10</span>
-                        <span className="px-2 py-1 bg-success/10 text-success text-xs font-medium rounded">Low Risk</span>
+                    <div className="pt-3 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          AI Risk Score
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold text-success">
+                            {result.security.riskScore}/10
+                          </span>
+                          <span className="px-2 py-1 bg-success/10 text-success text-xs font-medium rounded">
+                            Low Risk
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </ResultCard>
+                </ResultCard>
 
-              {/* Domain Information */}
-              <ResultCard
-                title="Domain Information"
-                icon={<Globe className="w-4 h-4" />}
-                defaultOpen={true}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Domain Age</span>
-                    <span className="text-sm font-medium text-foreground">{result.domain.age}</span>
+                {/* Domain Information */}
+                <ResultCard
+                  title="Domain Information"
+                  icon={<Globe className="w-4 h-4" />}
+                  defaultOpen={true}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Domain Age
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {result.domain.age}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Registrar
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {result.domain.registrar}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Last Updated
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {result.domain.lastUpdated}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Registrar</span>
-                    <span className="text-sm font-medium text-foreground">{result.domain.registrar}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Last Updated</span>
-                    <span className="text-sm font-medium text-foreground">{result.domain.lastUpdated}</span>
-                  </div>
-                </div>
-              </ResultCard>
+                </ResultCard>
 
-              {/* Content Analysis */}
-              <ResultCard
-                title="Content Analysis"
-                icon={<FileText className="w-4 h-4" />}
-                defaultOpen={true}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Page Load Time</span>
-                    <span className="text-sm font-medium text-foreground">{result.content.loadTime}</span>
+                {/* Content Analysis */}
+                <ResultCard
+                  title="Content Analysis"
+                  icon={<FileText className="w-4 h-4" />}
+                  defaultOpen={true}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Page Load Time
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {result.content.loadTime}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Mobile Friendly
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${result.content.mobileFriendly ? "text-success" : "text-danger"}`}
+                      >
+                        {result.content.mobileFriendly ? "Yes" : "No"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Content Type
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {result.content.contentType}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Mobile Friendly</span>
-                    <span className={`text-sm font-medium ${result.content.mobileFriendly ? 'text-success' : 'text-danger'}`}>
-                      {result.content.mobileFriendly ? 'Yes' : 'No'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Content Type</span>
-                    <span className="text-sm font-medium text-foreground">{result.content.contentType}</span>
-                  </div>
-                </div>
-              </ResultCard>
+                </ResultCard>
               </div>
             </div>
           )}
