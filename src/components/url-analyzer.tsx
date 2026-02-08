@@ -1,12 +1,69 @@
 'use client';
 
-import { useState } from 'react';
-import { Globe } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Globe, Search, Shield, Activity, Brain, CheckCircle2 } from 'lucide-react';
+
+const ANALYSIS_STEPS = [
+  {
+    id: 'validate',
+    label: 'Validating URL & extracting metadata',
+    icon: Search,
+    duration: 1500,
+  },
+  {
+    id: 'scanner',
+    label: 'Calling Cloudflare URL Scanner API',
+    icon: Globe,
+    duration: 2000,
+  },
+  {
+    id: 'reputation',
+    label: 'Gathering reputation & threat intelligence',
+    icon: Shield,
+    duration: 1800,
+  },
+  {
+    id: 'ai',
+    label: 'Processing data with Workers AI (Llama)',
+    icon: Brain,
+    duration: 2200,
+  },
+  {
+    id: 'verdict',
+    label: 'Generating final verdict',
+    icon: Activity,
+    duration: 1000,
+  },
+];
 
 export default function UrlAnalyzer() {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAnalyzing) {
+      setCurrentStep(0);
+      return;
+    }
+
+    const totalSteps = ANALYSIS_STEPS.length;
+    let currentStepIndex = 0;
+
+    const advanceStep = () => {
+      if (currentStepIndex < totalSteps) {
+        setCurrentStep(currentStepIndex);
+        currentStepIndex++;
+        
+        if (currentStepIndex < totalSteps) {
+          setTimeout(advanceStep, ANALYSIS_STEPS[currentStepIndex - 1].duration);
+        }
+      }
+    };
+
+    advanceStep();
+  }, [isAnalyzing]);
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +74,8 @@ export default function UrlAnalyzer() {
     setResult(null);
 
     // Simulate AI analysis - replace with actual API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const totalDuration = ANALYSIS_STEPS.reduce((sum, step) => sum + step.duration, 0);
+    await new Promise((resolve) => setTimeout(resolve, totalDuration));
 
     // Mock result
     const mockResult = `URL Analysis Complete
@@ -98,27 +156,80 @@ This analysis was powered by Cloudflare AI`;
           )}
 
           {isAnalyzing && (
-            <div className="flex items-center justify-center h-[268px]">
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 mb-4">
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-primary" />
+            <div className="flex flex-col gap-4 py-8">
+              {/* Current Step Highlight */}
+              <div className="flex items-center justify-center mb-2">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {(() => {
+                      const StepIcon = ANALYSIS_STEPS[currentStep]?.icon || Globe;
+                      return <StepIcon className="w-7 h-7 text-primary" />;
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Step Text */}
+              <div className="text-center mb-4">
+                <p className="text-lg font-medium text-foreground mb-2">
+                  {ANALYSIS_STEPS[currentStep]?.label}
+                </p>
+                <div className="flex items-center justify-center gap-1 dot-typing">
+                  <span className="w-2 h-2 bg-primary rounded-full" />
+                  <span className="w-2 h-2 bg-primary rounded-full" />
+                  <span className="w-2 h-2 bg-primary rounded-full" />
+                </div>
+              </div>
+
+              {/* All Steps Progress */}
+              <div className="space-y-3 px-4">
+                {ANALYSIS_STEPS.map((step, index) => {
+                  const StepIcon = step.icon;
+                  const isCompleted = index < currentStep;
+                  const isCurrent = index === currentStep;
+                  const isPending = index > currentStep;
+
+                  return (
+                    <div
+                      key={step.id}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
+                        isCurrent
+                          ? 'bg-primary/5 border-primary/30'
+                          : isCompleted
+                          ? 'bg-muted/20 border-border/50'
+                          : 'bg-transparent border-border/30 opacity-50'
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+                          isCompleted
+                            ? 'bg-primary text-primary-foreground'
+                            : isCurrent
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-muted/30 text-muted-foreground'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <StepIcon className="w-4 h-4" />
+                        )}
+                      </div>
+                      <p
+                        className={`text-sm font-medium transition-colors ${
+                          isCurrent
+                            ? 'text-foreground'
+                            : isCompleted
+                            ? 'text-muted-foreground'
+                            : 'text-muted-foreground/60'
+                        }`}
+                      >
+                        {step.label}
+                      </p>
                     </div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <p className="text-lg text-foreground font-medium">AI Analysis in Progress</p>
-                  <div className="flex items-center justify-center gap-1 dot-typing">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Analyzing security, content, and domain information
-                  </p>
-                </div>
+                  );
+                })}
               </div>
             </div>
           )}
