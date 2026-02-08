@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/components/theme-provider";
 import UrlAnalyzer from "@/components/url-analyzer";
 
 export default function Home() {
