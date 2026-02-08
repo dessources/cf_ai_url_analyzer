@@ -1,9 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Search, Shield, Activity, Brain, CheckCircle2, Moon, Sun, AlertCircle, Info, Lock, FileText } from 'lucide-react';
+import { Globe, Search, Shield, Activity, Brain, CheckCircle2, Moon, Sun, AlertCircle, Info, Lock, FileText, AlertTriangle, XCircle } from 'lucide-react';
 import { useTheme } from './theme-provider';
 import { ResultCard } from './result-card';
+
+type ErrorType = 'invalid_url' | 'service_unavailable' | 'rate_limit' | 'network_error' | null;
+
+interface AnalysisError {
+  type: ErrorType;
+  message: string;
+  details?: string;
+}
 
 const ANALYSIS_STEPS = [
   {
@@ -65,6 +73,7 @@ export default function UrlAnalyzer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<AnalysisError | null>(null);
 
   useEffect(() => {
     if (!isAnalyzing) {
@@ -94,37 +103,99 @@ export default function UrlAnalyzer() {
     
     if (!url.trim()) return;
 
+    // Basic URL validation
+    try {
+      new URL(url);
+    } catch {
+      setError({
+        type: 'invalid_url',
+        message: 'Invalid URL Format',
+        details: 'Please enter a valid URL including the protocol (http:// or https://)',
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     setResult(null);
+    setError(null);
 
-    // Simulate AI analysis - replace with actual API call
-    const totalDuration = ANALYSIS_STEPS.reduce((sum, step) => sum + step.duration, 0);
-    await new Promise((resolve) => setTimeout(resolve, totalDuration));
+    try {
+      // Simulate AI analysis - replace with actual API call
+      const totalDuration = ANALYSIS_STEPS.reduce((sum, step) => sum + step.duration, 0);
+      await new Promise((resolve) => setTimeout(resolve, totalDuration));
 
-    // Mock result
-    const mockResult: AnalysisResult = {
-      url,
-      security: {
-        https: true,
-        sslValid: true,
-        maliciousPatterns: false,
-        riskScore: 2,
-      },
-      domain: {
-        age: '5 years',
-        registrar: 'Example Registrar Inc.',
-        lastUpdated: '30 days ago',
-      },
-      content: {
-        loadTime: '1.2s',
-        mobileFriendly: true,
-        contentType: 'Web Application',
-      },
-      recommendation: 'Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.',
-    };
+      // Simulate random errors for demonstration (remove in production)
+      const shouldSimulateError = Math.random() < 0.2; // 20% chance of error
+      if (shouldSimulateError) {
+        const errorTypes: ErrorType[] = ['service_unavailable', 'rate_limit', 'network_error'];
+        const randomError = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+        
+        const errorMessages = {
+          service_unavailable: {
+            message: 'Service Temporarily Unavailable',
+            details: 'The URL analysis service is currently experiencing issues. Please try again in a few moments.',
+          },
+          rate_limit: {
+            message: 'Rate Limit Exceeded',
+            details: 'You have reached the maximum number of requests. Please wait a few minutes before trying again.',
+          },
+          network_error: {
+            message: 'Network Connection Error',
+            details: 'Unable to connect to the analysis service. Please check your internet connection and try again.',
+          },
+        };
 
-    setResult(mockResult);
-    setIsAnalyzing(false);
+        throw new Error(randomError);
+      }
+
+      // Mock result
+      const mockResult: AnalysisResult = {
+        url,
+        security: {
+          https: true,
+          sslValid: true,
+          maliciousPatterns: false,
+          riskScore: 2,
+        },
+        domain: {
+          age: '5 years',
+          registrar: 'Example Registrar Inc.',
+          lastUpdated: '30 days ago',
+        },
+        content: {
+          loadTime: '1.2s',
+          mobileFriendly: true,
+          contentType: 'Web Application',
+        },
+        recommendation: 'Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.',
+      };
+
+      setResult(mockResult);
+    } catch (err) {
+      const errorType = (err as Error).message as ErrorType;
+      const errorMessages = {
+        service_unavailable: {
+          message: 'Service Temporarily Unavailable',
+          details: 'The URL analysis service is currently experiencing issues. Please try again in a few moments.',
+        },
+        rate_limit: {
+          message: 'Rate Limit Exceeded',
+          details: 'You have reached the maximum number of requests. Please wait a few minutes before trying again.',
+        },
+        network_error: {
+          message: 'Network Connection Error',
+          details: 'Unable to connect to the analysis service. Please check your internet connection and try again.',
+        },
+      };
+
+      setError({
+        type: errorType,
+        message: errorMessages[errorType as keyof typeof errorMessages]?.message || 'Analysis Failed',
+        details: errorMessages[errorType as keyof typeof errorMessages]?.details || 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -176,7 +247,7 @@ export default function UrlAnalyzer() {
 
         {/* Results Section */}
         <div className="p-6 min-h-[300px]">
-          {!isAnalyzing && !result && (
+          {!isAnalyzing && !result && !error && (
             <div className="flex items-center justify-center h-[268px] text-muted-foreground">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/30 mb-4">
@@ -184,6 +255,36 @@ export default function UrlAnalyzer() {
                 </div>
                 <p className="text-lg">Analysis will appear here</p>
                 <p className="text-sm mt-2">Enter a URL above and click Analyze to begin</p>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-full max-w-md">
+                <div className="bg-danger/5 border border-danger/20 rounded-lg p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-danger/10 flex-shrink-0">
+                      {error.type === 'invalid_url' ? (
+                        <AlertCircle className="w-5 h-5 text-danger" />
+                      ) : error.type === 'rate_limit' ? (
+                        <AlertTriangle className="w-5 h-5 text-danger" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-danger" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-foreground mb-2">{error.message}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{error.details}</p>
+                      <button
+                        onClick={() => setError(null)}
+                        className="px-4 py-2 bg-danger/10 hover:bg-danger/20 text-danger text-sm font-medium rounded-md transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -268,26 +369,31 @@ export default function UrlAnalyzer() {
           )}
 
           {result && (
-            <div className="space-y-4">
-              {/* AI Recommendation - Shown First */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 flex-shrink-0">
-                    <Brain className="w-4 h-4 text-primary" />
+            <div>
+              {/* Sticky Header - AI Recommendation and Target URL */}
+              <div className="sticky top-0 z-10 bg-card pb-4 space-y-4">
+                {/* AI Recommendation - Shown First */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 flex-shrink-0">
+                      <Brain className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
+                      <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
-                    <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
-                  </div>
+                </div>
+
+                {/* Target URL */}
+                <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1">Target URL</p>
+                  <p className="text-sm text-foreground font-medium break-all">{result.url}</p>
                 </div>
               </div>
 
-              {/* Target URL */}
-              <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
-                <p className="text-xs text-muted-foreground mb-1">Target URL</p>
-                <p className="text-sm text-foreground font-medium break-all">{result.url}</p>
-              </div>
-
+              {/* Scrollable Details Section */}
+              <div className="space-y-4 pt-4">
               {/* Security Assessment */}
               <ResultCard
                 title="Security Assessment"
@@ -373,6 +479,7 @@ export default function UrlAnalyzer() {
                   </div>
                 </div>
               </ResultCard>
+              </div>
             </div>
           )}
         </div>
