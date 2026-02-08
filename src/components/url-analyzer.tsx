@@ -269,6 +269,19 @@ export default function UrlAnalyzer() {
 
           {result && (
             <div className="space-y-4">
+              {/* AI Recommendation - Shown First */}
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 flex-shrink-0">
+                    <Brain className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
+                    <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Target URL */}
               <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Target URL</p>
@@ -360,19 +373,6 @@ export default function UrlAnalyzer() {
                   </div>
                 </div>
               </ResultCard>
-
-              {/* AI Recommendation */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 flex-shrink-0">
-                    <Brain className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-1">AI Recommendation</h4>
-                    <p className="text-sm text-foreground leading-relaxed">{result.recommendation}</p>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
