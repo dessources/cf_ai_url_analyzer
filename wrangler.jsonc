@@ -9,7 +9,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "cf-ai-url-analyzer",
-	"main": ".open-next/worker.js",
+	"main": "worker-entrypoint.ts",
 	"compatibility_date": "2025-12-01",
 	"compatibility_flags": [
 		"nodejs_compat",
@@ -49,7 +49,14 @@
 	"ai": {
 		"binding": "AI",
 		"remote": true
-	}
+	},
+	"workflows": [
+		{
+			"name": "url-analyzer-workflow",
+			"binding": "URL_ANALYZER_WORKFLOW",
+			"class_name": "URLAnalyzerWorkflow"
+		}
+	]
 	/**
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables

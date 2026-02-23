@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import {
   Globe,
   Search,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { ResultCard } from "./result-card";
+import analyzeURL from "@/lib/analyzeURL";
 
 type ErrorType =
   | "invalid_url"
@@ -89,7 +91,7 @@ interface AnalysisResult {
 
 export default function UrlAnalyzer() {
   const { theme, toggleTheme } = useTheme();
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState("https://www.jaemdessources.dev");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -136,8 +138,11 @@ export default function UrlAnalyzer() {
         details:
           "Please enter a valid URL including the protocol (http:// or https://)",
       });
+
       return;
     }
+
+    await analyzeURL(url);
 
     setIsAnalyzing(true);
     setResult(null);

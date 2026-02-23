@@ -190,3 +190,9 @@ next-env.d.ts
 
 
 !.dev.vars.example
+
+#temporary files
+Todo.md
+
+#.rest api test files
+*.rest
