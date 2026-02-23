@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
   if (url) {
     //validate url
 
-    console.log("URL: ", url);
     if (validateURL(url)) {
       const c = await getCloudflareContext({ async: true });
 

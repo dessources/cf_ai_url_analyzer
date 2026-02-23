@@ -1,7 +1,7 @@
 export default async function analyzeURL(url: string) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/analyze?url=${url}`,
+      `http://localhost:8787/api/analyze?url=${url}`,
       {
         method: "GET",
       },
