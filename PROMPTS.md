@@ -43,37 +43,66 @@ User submits URL
 
 **Purpose:** Analyze aggregated URL data and provide a human-readable security assessment with reasoning.
 
-**Status:** Pending implementation
+**Status:** Implemented (v1)
 
 **Input Data (fed to LLM):**
-- URL being analyzed
-- Domain metadata (age, registrar, SSL cert info)
-- Redirect chain (if any)
-- Page title and meta description
-- Suspicious keyword matches
-- URL Scanner results (screenshot analysis, detected technologies)
-- Reputation data from threat intel sources
+- **Target URL**: The original submitted URL and its components.
+- **Metadata**: Suspicious keyword matches and heuristic suspicious flags.
+- **Scanner Results**: Live scan data (Malicious verdict, status code, IP info, categories).
+- **Reputation Data**: Cloudflare Intelligence data (Risk score, popularity, content categories).
 
 **Expected Output:**
-- Risk level (Safe / Suspicious / Dangerous)
-- Confidence score
-- Human-readable explanation of WHY
+- Risk Level (Safe, Suspicious, Dangerous)
+- Confidence Score (0-100)
+- Human-readable reasoning
 - Specific indicators found
-- Recommendation for user
+- User recommendation
 
-**Template:**
-```
-[To be designed - v1 pending]
+**Template (v1):**
+```markdown
+You are a Cloudflare Security Analyst. Analyze the following data for a URL and provide a security assessment.
+
+### TARGET URL
+- URL: ${metadata.url}
+- Hostname: ${metadata.hostname}
+- Protocol: ${metadata.protocol}
+
+### STEP A: METADATA & HEURISTICS
+- Suspicious Keywords Found: ${matchedKeywords}
+- Is Suspicious (Heuristic): ${metadata.isSuspicious}
+
+### STEP B: LIVE SCAN RESULTS (URL Scanner API)
+- Malicious Verdict: ${verdict.malicious}
+- Scan Categories: ${categories}
+- Page Title: ${scanResult.task.message || "N/A"}
+- Server: ${scanResult.page.server || "N/A"}
+- Status Code: ${scanResult.page.status || "N/A"}
+- IP: ${scanResult.page.ip} (${scanResult.page.country}, ${scanResult.page.asn})
+
+### STEP C: REPUTATION & THREAT INTEL (Cloudflare Intelligence)
+- Reputation Risk Score (0-100): ${intel.risk_score}
+- Popularity Rank: ${intel.popularity_rank}
+- Content Categories: ${contentCategories}
+- Known Malicious Categories: ${maliciousCategories}
+
+### YOUR TASK
+Based on the data above, provide:
+1. **Risk Level**: (Safe, Suspicious, or Dangerous)
+2. **Confidence Score**: (0-100)
+3. **Reasoning**: A concise explanation of why you reached this verdict.
+4. **Key Indicators**: List the specific red flags or positive signals found.
+5. **Recommendation**: What should the user do?
+
+Provide your response in a clear, human-readable format.
 ```
 
 **Design Considerations:**
-- Should explain reasoning, not just give verdict
-- Needs to handle edge cases (URL Scanner fails, incomplete data)
-- Should be specific about indicators (e.g., "lookalike domain for PayPal")
-- Avoid false positives on legitimate shortened URLs
+- Consolidates live telemetry (Scanner) with historical reputation (Intelligence).
+- Forces structured reasoning before the final recommendation.
+- Includes heuristic indicators (keywords) to catch brand spoofing (e.g., "paypal").
 
 **Iterations:**
-- v1: [Initial implementation - pending]
+- v1: Initial implementation focusing on data synthesis and human-readable assessment.
 
 ---
 
