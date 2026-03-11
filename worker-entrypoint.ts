@@ -5,6 +5,7 @@
 import { default as handler } from "./.open-next/worker.js";
 
 export { URLAnalyzerWorkflow } from "./src/workflows/URLAnalyzerWorkflow";
+export { AnalysisStateDO } from "./src/durable-objects/AnalysisStateDO";
 
 export default {
   fetch: handler.fetch,

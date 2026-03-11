@@ -50,6 +50,22 @@
 		"binding": "AI",
 		"remote": true
 	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "ANALYSIS_STATE_DO",
+				"class_name": "AnalysisStateDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": [
+				"AnalysisStateDO"
+			]
+		}
+	],
 	"workflows": [
 		{
 			"name": "url-analyzer-workflow",
