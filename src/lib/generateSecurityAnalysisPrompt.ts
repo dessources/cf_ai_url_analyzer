@@ -14,10 +14,13 @@ export default function generateSecurityAnalysisPrompt(
   const matchedKeywords = metadata.matchedKeywords.join(", ") || "None";
 
   const intel = threatIntel.result;
+  const contentCategoriesArr =
+    (intel.content_categories ?? intel.inherited_content_categories) || [];
   const contentCategories =
-    intel.content_categories.map((c) => c.name).join(", ") || "None";
+    contentCategoriesArr.map((c) => c.name).join(", ") || "None";
+
   const maliciousCategories =
-    intel.malicious_categories.map((c) => c.name).join(", ") || "None";
+    (intel.malicious_categories || []).map((c) => c.name).join(", ") || "None";
 
   return `
 You are a Cloudflare Security Analyst. Analyze the following data for a URL and provide a security assessment.

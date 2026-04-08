@@ -77,14 +77,14 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
         await updateState({ currentStep: "Submitting to URL Scanner..." });
 
         const account_id = process.env.CLOUDFLARE_ACCOUNT_ID;
-        const api_token = process.env.URLScannerAPIAccessToken;
+        const url_scanner_api_token = process.env.URL_SCANNER_API_ACCESS_TOKEN;
         console.log("\nAbout to fetch clouflare api\n");
         const response = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${account_id}/urlscanner/v2/scan`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${api_token}`,
+              Authorization: `Bearer ${url_scanner_api_token}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ url: event.payload.url }),
@@ -121,11 +121,12 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
             currentStep: `Scanning URL (Attempt ${attempts + 1})...`,
           });
 
-          const api_token = process.env.URLScannerAPIAccessToken;
+          const url_scanner_api_token =
+            process.env.URL_SCANNER_API_ACCESS_TOKEN;
           const response = await fetch(scanSubmission.api, {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${api_token}`,
+              Authorization: `Bearer ${url_scanner_api_token}`,
               "Content-Type": "application/json",
             },
           });
@@ -170,14 +171,15 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
         await updateState({ currentStep: "Fetching Threat Intelligence..." });
 
         const account_id = process.env.CLOUDFLARE_ACCOUNT_ID;
-        const api_token = process.env.URLScannerAPIAccessToken;
+        const threat_intel_api_token =
+          process.env.THREAT_INTEL_API_ACCESS_TOKEN;
 
         const response = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${account_id}/intel/domain?domain=${metadata.hostname}`,
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${api_token}`,
+              Authorization: `Bearer ${threat_intel_api_token}`,
               "Content-Type": "application/json",
             },
           },
@@ -185,7 +187,7 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
 
         if (!response.ok) {
           if ([400, 401, 403, 404].includes(response.status)) {
-            console.dir(response, { depth: null });
+            console.dir(await response.json(), { depth: null });
             throw new NonRetryableError(
               `Intelligence API terminal error: ${response.status}\n`,
             );
@@ -221,6 +223,8 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
             max_tokens: 1000,
           },
         );
+
+        console.log(result);
 
         await updateState({
           finalAnalysis: result,

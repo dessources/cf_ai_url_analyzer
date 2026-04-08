@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
+// export const runtime = "edge";
 
 /**
  * Endpoint to fetch current URL analysis progress from the Durable Object.
@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json({ error: "Missing workflow instance ID" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing workflow instance ID" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -22,13 +25,19 @@ export async function GET(req: NextRequest) {
 
     const response = await stateDO.fetch("http://do/get");
     if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch state from Durable Object" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to fetch state from Durable Object" },
+        { status: 500 },
+      );
     }
 
     const state = await response.json();
     return NextResponse.json(state);
   } catch (err: any) {
     console.error("Status Polling Error:", err);
-    return NextResponse.json({ error: err.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
