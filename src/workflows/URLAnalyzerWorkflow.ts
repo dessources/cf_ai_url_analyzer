@@ -152,12 +152,12 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
 
       if (!scanResult) {
         attempts++;
-        await step.sleep(`wait for scan attempt ${attempts}`, "10 seconds");
+        await step.sleep(`wait for scan attempt ${attempts}`, "5 seconds");
       }
     }
 
     if (!scanResult) {
-      const error = `URL Scan timed out after ${URL_SCAN_MAX_ATTEMPTS * 10} seconds.`;
+      const error = `URL Scan timed out after ${URL_SCAN_MAX_ATTEMPTS * 5} seconds.`;
       await updateState({ status: "failed", error });
       throw new Error(error);
     }
