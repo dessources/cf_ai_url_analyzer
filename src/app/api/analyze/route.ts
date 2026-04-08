@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     //validate url
 
     if (validateURL(url)) {
+      console.log("Getting to ceating woorkflow");
       const c = await getCloudflareContext({ async: true });
 
       const workflow = await c.env.URL_ANALYZER_WORKFLOW.create({
@@ -22,10 +23,12 @@ export async function GET(req: NextRequest) {
         },
       });
 
+      console.log("workflow created");
+
       return NextResponse.json(
         {
-          message: `Received URL: ${url}`,
-          data: JSON.stringify(workflow),
+          id: workflow.id,
+          message: `Analysis started for: ${url}`,
         },
         {
           status: 200,

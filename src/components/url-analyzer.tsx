@@ -21,6 +21,7 @@ import {
 import { useTheme } from "./theme-provider";
 import { ResultCard } from "./result-card";
 import analyzeURL from "@/lib/analyzeURL";
+import { IntelligenceResponse, ScanResult } from "@/types/workflow-types";
 
 type ErrorType =
   | "invalid_url"
@@ -97,36 +98,20 @@ export default function UrlAnalyzer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<AnalysisError | null>(null);
 
-  useEffect(() => {
-    if (!isAnalyzing) {
-      setCurrentStep(0);
-      return;
-    }
-
-    const totalSteps = ANALYSIS_STEPS.length;
-    let currentStepIndex = 0;
-
-    const advanceStep = () => {
-      if (currentStepIndex < totalSteps) {
-        setCurrentStep(currentStepIndex);
-        currentStepIndex++;
-
-        if (currentStepIndex < totalSteps) {
-          setTimeout(
-            advanceStep,
-            ANALYSIS_STEPS[currentStepIndex - 1].duration,
-          );
-        }
-      }
-    };
-
-    advanceStep();
-  }, [isAnalyzing]);
+  const mapWorkflowStepToUIIndex = (workflowStep: string): number => {
+    const s = workflowStep.toLowerCase();
+    if (s.includes("validat")) return 0;
+    if (s.includes("scan")) return 1;
+    if (s.includes("intel") || s.includes("reputation")) return 2;
+    if (s.includes("ai") || s.includes("analysis")) return 3;
+    if (s.includes("complete")) return 4;
+    return 0;
+  };
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!url.trim()) return;
+    if (!url.trim() || isAnalyzing) return;
 
     // Basic URL validation
     try {
@@ -142,107 +127,105 @@ export default function UrlAnalyzer() {
       return;
     }
 
-    await analyzeURL(url);
-
     setIsAnalyzing(true);
     setResult(null);
     setError(null);
+    setCurrentStep(0);
 
     try {
-      // Simulate AI analysis - replace with actual API call
-      const totalDuration = ANALYSIS_STEPS.reduce(
-        (sum, step) => sum + step.duration,
-        0,
+      // 1. Start the workflow
+      console.log("calling the API");
+      const startRes = await fetch(
+        `/api/analyze?url=${encodeURIComponent(url)}`,
       );
-      await new Promise((resolve) => setTimeout(resolve, totalDuration));
+      if (!startRes.ok) throw new Error("service_unavailable");
 
-      // Simulate random errors for demonstration (remove in production)
-      const shouldSimulateError = Math.random() < 0.2; // 20% chance of error
-      if (shouldSimulateError) {
-        const errorTypes: ErrorType[] = [
-          "service_unavailable",
-          "rate_limit",
-          "network_error",
-        ];
-        const randomError =
-          errorTypes[Math.floor(Math.random() * errorTypes.length)];
+      const { id } = (await startRes.json()) as { id: string; message: string };
 
-        const errorMessages = {
-          service_unavailable: {
-            message: "Service Temporarily Unavailable",
-            details:
-              "The URL analysis service is currently experiencing issues. Please try again in a few moments.",
-          },
-          rate_limit: {
-            message: "Rate Limit Exceeded",
-            details:
-              "You have reached the maximum number of requests. Please wait a few minutes before trying again.",
-          },
-          network_error: {
-            message: "Network Connection Error",
-            details:
-              "Unable to connect to the analysis service. Please check your internet connection and try again.",
-          },
-        };
+      // 2. Poll for status
+      const poll = async () => {
+        try {
+          const statusRes = await fetch(`/api/status?id=${id}`);
+          if (!statusRes.ok) throw new Error("status_fetch_failed");
 
-        throw new Error(randomError as string);
-      }
+          const state = (await statusRes.json()) as {
+            currentStep: string;
+            status: string;
+            metadata?: any;
+            finalAnalysis?: any;
+            error?: any;
+            scanResult: ScanResult;
+            threatIntel: IntelligenceResponse;
+          };
 
-      // Mock result
-      const mockResult: AnalysisResult = {
-        url,
-        security: {
-          https: true,
-          sslValid: true,
-          maliciousPatterns: false,
-          riskScore: 2,
-        },
-        domain: {
-          age: "5 years",
-          registrar: "Example Registrar Inc.",
-          lastUpdated: "30 days ago",
-        },
-        content: {
-          loadTime: "1.2s",
-          mobileFriendly: true,
-          contentType: "Web Application",
-        },
-        recommendation:
-          "Safe to proceed. This URL shows no signs of malicious activity and follows security best practices.",
+          if (state.currentStep) {
+            setCurrentStep(mapWorkflowStepToUIIndex(state.currentStep));
+          }
+
+          if (state.status === "completed") {
+            setIsAnalyzing(false);
+
+            // Map real state to the UI's Result interface
+            setResult({
+              url: state.metadata?.url || url,
+              security: {
+                https: state.metadata?.protocol === "https:",
+                sslValid: true,
+                maliciousPatterns:
+                  state.scanResult?.verdicts.overall.malicious || false,
+                riskScore: state.threatIntel?.result.risk_score || 0,
+              },
+              domain: {
+                age: "N/A",
+                registrar: state.scanResult?.page.server || "Unknown",
+                lastUpdated: "Recently Scanned",
+              },
+              content: {
+                loadTime: "N/A",
+                mobileFriendly: true,
+                contentType: state.scanResult?.page.mimeType || "text/html",
+              },
+              recommendation:
+                state.finalAnalysis?.response ||
+                state.finalAnalysis ||
+                "No recommendation available.",
+            });
+            return; // Stop polling
+          }
+
+          if (state.status === "failed") {
+            setIsAnalyzing(false);
+            setError({
+              type: "network_error",
+              message: "Analysis Failed",
+              details:
+                state.error || "An unexpected error occurred during analysis.",
+            });
+            return; // Stop polling
+          }
+
+          // Continue polling
+          setTimeout(poll, 1000);
+        } catch (err) {
+          console.error("Polling error:", err);
+          setIsAnalyzing(false);
+          setError({
+            type: "network_error",
+            message: "Connection Lost",
+            details: "The connection to the analysis service was interrupted.",
+          });
+        }
       };
 
-      setResult(mockResult);
+      await poll();
     } catch (err) {
-      const errorType = (err as Error).message as ErrorType;
-      const errorMessages = {
-        service_unavailable: {
-          message: "Service Temporarily Unavailable",
-          details:
-            "The URL analysis service is currently experiencing issues. Please try again in a few moments.",
-        },
-        rate_limit: {
-          message: "Rate Limit Exceeded",
-          details:
-            "You have reached the maximum number of requests. Please wait a few minutes before trying again.",
-        },
-        network_error: {
-          message: "Network Connection Error",
-          details:
-            "Unable to connect to the analysis service. Please check your internet connection and try again.",
-        },
-      };
-
-      setError({
-        type: errorType,
-        message:
-          errorMessages[errorType as keyof typeof errorMessages]?.message ||
-          "Analysis Failed",
-        details:
-          errorMessages[errorType as keyof typeof errorMessages]?.details ||
-          "An unexpected error occurred. Please try again.",
-      });
-    } finally {
       setIsAnalyzing(false);
+      const errorType = (err as Error).message as ErrorType;
+      setError({
+        type: errorType === "service_unavailable" ? errorType : "network_error",
+        message: "Analysis Failed",
+        details: "Could not start the analysis. Please try again later.",
+      });
     }
   };
 

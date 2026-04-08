@@ -24,7 +24,7 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
 > {
   async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep) {
     // 0. Get the Durable Object instance for this workflow run
-    const doId = this.env.ANALYSIS_STATE_DO.idFromName(this.id);
+    const doId = this.env.ANALYSIS_STATE_DO.idFromName(event.instanceId);
     const stateDO = this.env.ANALYSIS_STATE_DO.get(doId);
 
     const updateState = async (updates: any) => {
@@ -69,7 +69,7 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
         return data;
       },
     );
-
+    console.log("\nAbout to go to step B \n");
     // Step B: Submit scan
     const scanSubmission = await step.do(
       "submit scan",
@@ -78,7 +78,7 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
 
         const account_id = process.env.CLOUDFLARE_ACCOUNT_ID;
         const api_token = process.env.URLScannerAPIAccessToken;
-
+        console.log("\nAbout to fetch clouflare api\n");
         const response = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${account_id}/urlscanner/v2/scan`,
           {
@@ -161,6 +161,8 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
       throw new Error(error);
     }
 
+    console.dir(scanResult, { depth: null });
+
     // Step C: Threat Intel
     const threatIntel = await step.do(
       "get threat intel",
@@ -183,8 +185,9 @@ export class URLAnalyzerWorkflow extends WorkflowEntrypoint<
 
         if (!response.ok) {
           if ([400, 401, 403, 404].includes(response.status)) {
+            console.dir(response, { depth: null });
             throw new NonRetryableError(
-              `Intelligence API terminal error: ${response.status}`,
+              `Intelligence API terminal error: ${response.status}\n`,
             );
           }
           throw new Error(`Intelligence API fetch failed: ${response.status}`);

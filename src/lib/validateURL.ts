@@ -5,7 +5,6 @@ export default function validateURL(url: string) {
     parsedURL = URL.parse(url);
 
     if (!parsedURL) return false;
-    console.log(parsedURL.protocol);
     if (!["http:", "https:"].includes(parsedURL.protocol)) {
       return false;
     }
