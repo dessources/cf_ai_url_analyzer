@@ -43,7 +43,7 @@ User submits URL
 
 **Purpose:** Analyze aggregated URL data and provide a human-readable security assessment with reasoning.
 
-**Status:** Implemented (v1)
+**Status:** Implemented (v2)
 
 **Input Data (fed to LLM):**
 - **Target URL**: The original submitted URL and its components.
@@ -52,13 +52,9 @@ User submits URL
 - **Reputation Data**: Cloudflare Intelligence data (Risk score, popularity, content categories).
 
 **Expected Output:**
-- Risk Level (Safe, Suspicious, Dangerous)
-- Confidence Score (0-100)
-- Human-readable reasoning
-- Specific indicators found
-- User recommendation
+- A single concise paragraph (1-4 sentences) explaining the verdict and reasoning.
 
-**Template (v1):**
+**Template (v2):**
 ```markdown
 You are a Cloudflare Security Analyst. Analyze the following data for a URL and provide a security assessment.
 
@@ -74,7 +70,7 @@ You are a Cloudflare Security Analyst. Analyze the following data for a URL and 
 ### STEP B: LIVE SCAN RESULTS (URL Scanner API)
 - Malicious Verdict: ${verdict.malicious}
 - Scan Categories: ${categories}
-- Page Title: ${scanResult.task.message || "N/A"}
+- Page Title: ${scanResult.page.title || "N/A"}
 - Server: ${scanResult.page.server || "N/A"}
 - Status Code: ${scanResult.page.status || "N/A"}
 - IP: ${scanResult.page.ip} (${scanResult.page.country}, ${scanResult.page.asn})
@@ -86,23 +82,19 @@ You are a Cloudflare Security Analyst. Analyze the following data for a URL and 
 - Known Malicious Categories: ${maliciousCategories}
 
 ### YOUR TASK
-Based on the data above, provide:
-1. **Risk Level**: (Safe, Suspicious, or Dangerous)
-2. **Confidence Score**: (0-100)
-3. **Reasoning**: A concise explanation of why you reached this verdict.
-4. **Key Indicators**: List the specific red flags or positive signals found.
-5. **Recommendation**: What should the user do?
+Based on the data above, provide a concise security assessment (1-4 sentences) explaining the verdict and reasoning. Focus only on the explanation of "why" you reached your conclusion.
 
-Provide your response in a clear, human-readable format.
+Provide your response as a single, human-readable paragraph. Do not include labels, headers, risk levels, or scores in your output.
 ```
 
 **Design Considerations:**
 - Consolidates live telemetry (Scanner) with historical reputation (Intelligence).
-- Forces structured reasoning before the final recommendation.
+- v2 prioritizes human-readable natural language over structured fields for better UX.
 - Includes heuristic indicators (keywords) to catch brand spoofing (e.g., "paypal").
 
 **Iterations:**
-- v1: Initial implementation focusing on data synthesis and human-readable assessment.
+- v1: Initial implementation focusing on data synthesis and human-readable assessment with structured output (Risk Level, Confidence, etc.).
+- v2: Simplified to a single paragraph (1-4 sentences) to provide a more natural and direct security assessment.
 
 ---
 
@@ -261,4 +253,61 @@ add all the prompts that I gave in this chat to a "v0.prompts.md" file so I can 
 
 ---
 
-*Last updated: Merged v0 UI prompts into unified log*
+---
+
+## Session: Prompt Refinement & Markdown Integration
+
+The following prompts were used during this session to refine the AI output and improve markdown rendering in the UI.
+
+### Session Prompt 1: Markdown Integration
+
+**Purpose:** Enable markdown rendering for AI recommendations.
+
+**Prompt:**
+```
+replace the p tag on line 425 of src/components/url-analyzer.tsx by a next-mdx-remote component that takes result.recommendation as the markdown prop
+```
+
+**Implemented:**
+- Replaced standard `<p>` tag with `MDXRemote` from `next-mdx-remote/rsc`.
+- Added `remark-gfm` support.
+- Wrapped in `prose prose-invert` for consistent styling.
+
+---
+
+### Session Prompt 2: Switch to ReactMarkdown
+
+**Purpose:** Resolve RSC/Client Component conflicts by switching to a more flexible client-side markdown library.
+
+**Prompt:**
+```
+replace next-mdx-remote by react-markdown
+```
+
+**Implemented:**
+- Switched from `next-mdx-remote` to `react-markdown`.
+- Maintained `remark-gfm` for advanced markdown features.
+- Ensured seamless client-side rendering within the existing UI.
+
+---
+
+### Session Prompt 3: AI Assessment Prompt Refinement (v2)
+
+**Purpose:** Simplify AI output to a natural language paragraph focusing exclusively on reasoning.
+
+**Prompt:**
+```
+the current prompt in src/lib/generateSecurityAnalysisPrompt.ts does not specify a detailed response format for the AI. I should be 1-4 sentences like so:
+"The URL appears to be a personal website for a systems engineer, with no suspicious keywords or malicious verdicts found during the scan. The server is hosted on Vercel, a reputable platform, and the IP address is located in the United States. The lack of any known malicious categories or suspicious activity suggests that the website is legitimate."
+
+So only the reasoning is needed as the output of the prompt
+```
+
+**Implemented:**
+- Updated `generateSecurityAnalysisPrompt.ts` to request a concise 1-4 sentence reasoning paragraph.
+- Removed structured fields (Risk Level, Score, etc.) from the LLM task to prioritize human-readable assessment.
+- Documented as v2 in the main prompts section.
+
+---
+
+*Last updated: Added Session: Prompt Refinement & Markdown Integration section*

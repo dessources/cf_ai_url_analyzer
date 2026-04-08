@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Globe,
   Search,
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { ResultCard } from "./result-card";
-import analyzeURL from "@/lib/analyzeURL";
+
 import { IntelligenceResponse, ScanResult } from "@/types/workflow-types";
 
 type ErrorType =
@@ -422,9 +423,11 @@ export default function UrlAnalyzer() {
                       <h4 className="text-sm font-semibold text-foreground mb-1">
                         AI Recommendation
                       </h4>
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {result.recommendation}
-                      </p>
+                      <div className="text-sm text-foreground leading-relaxed prose prose-invert max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {result.recommendation}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>
